@@ -3,10 +3,10 @@
 // - Windows: %APPDATA%/delta/settings.json
 // - macOS / Linux: ~/.config/delta/settings.json
 //
-// Dual-mode compatibility:
-// 1. Delta native custom provider: native.custom_providers
-// 2. Zed-compatible engine: language_models.openai_compatible.magpie
-// Model selection: agent.default_model { provider: "magpie", model: "<id>" }
+// Delta's settings root struct is StoredSettings with 3 fields: version, portable, native.
+// Custom providers belong in: native.custom_providers
+// Subagent profiles belong in: portable.profiles.{worker,scout,reviewer}.model
+// Skills, AGENTS instructions, and MCP belong in: ~/.agents
 
 export const agent = {
   id: "delta",
@@ -14,15 +14,15 @@ export const agent = {
   bin: "delta",
   config: "$APPDATA/delta/settings.json",
   format: "json",
-  model: "agent.default_model.model",
+  model: "portable.profiles.worker.model",
   ua: ["delta", "zed"],
   notice: "Restart Delta if the model picker does not update immediately.",
   icon: "https://delta.dev/favicon.svg",
   library: {
-    instructions: "$APPDATA/delta/AGENTS.md",
-    mcp: "$APPDATA/delta/mcp.json",
+    instructions: "~/.agents/AGENTS.md",
+    mcp: "~/.agents/mcp.json",
     mcpFormat: "zed",
-    skills: "$APPDATA/delta/skills",
+    skills: "~/.agents/skills",
   },
 };
 
@@ -34,25 +34,6 @@ export const agent = {
  * @param {Array} context.models - list of all active models in magpie
  */
 export function connect({ gateway, model, models }) {
-  const zedModels = (models || []).map((m) => {
-    let effort = null;
-    if (Array.isArray(m.efforts) && m.efforts.length > 0) {
-      effort = m.efforts[m.efforts.length - 1];
-    }
-
-    const item = {
-      name: m.id,
-      display_name: m.name || m.id,
-      max_tokens: m.context || 128000,
-    };
-
-    if (effort) {
-      item.reasoning_effort = effort;
-    }
-
-    return item;
-  });
-
   const deltaModels = (models || []).map((m) => {
     return {
       id: m.id,
@@ -64,11 +45,9 @@ export function connect({ gateway, model, models }) {
     };
   });
 
+  const targetModelId = model?.id || deltaModels[0]?.id || "group/auto-minimax-m3-1-flash-preview";
+
   return {
-    "language_models.openai_compatible.magpie": {
-      api_url: gateway.v1,
-      available_models: zedModels,
-    },
     "native.custom_providers": [
       {
         name: "Magpie",
@@ -77,12 +56,13 @@ export function connect({ gateway, model, models }) {
         headers: [
           {
             name: "Authorization",
-            value: `Bearer ${gateway.key}`,
+            value: `Bearer ${gateway.key || "magpie-delta"}`,
           },
         ],
         models: deltaModels,
       },
     ],
-    "agent.default_model.provider": "magpie",
+    "portable.profiles.scout.model": targetModelId,
+    "portable.profiles.reviewer.model": targetModelId,
   };
 }

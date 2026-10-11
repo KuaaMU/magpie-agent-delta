@@ -1,6 +1,6 @@
 {
   "name": "magpie-agent-delta",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Delta (delta.dev by Zed) as a magpie agent: pick any model for Delta on the Agents page",
   "type": "module",
   "author": "KuaaMU",

@@ -37,11 +37,12 @@ magpie plugin add @magpie-community/agent-delta
 
 ## ⚙️ 工作机制 / How It Works
 
-本插件基于 Magpie 2026 最新发布的 **Agent Plugin 规范** 实现：
+本插件基于 Magpie 最新发布的 **Agent Plugin 规范** 实现，针对 Delta 进行了原生级内核适配：
 1. **自动识别**：检测系统中的 Delta 可执行文件及配置目录（Windows: `%APPDATA%\delta`；macOS/Linux: `~/.config/delta`）。
-2. **端点配置**：在 `settings.json` 中写入 `language_models.openai_compatible.magpie` 指向 Magpie 本地网关（`http://127.0.0.1:3425/v1`）。
-3. **模型绑定**：将 `agent.default_model` 设为 `{ "provider": "magpie", "model": "<selected-model>" }`。
-4. **断开还原**：在 Magpie 中关闭 Delta 开关时，由 Magpie 自动清理注入配置并完整恢复用户的原有设置。
+2. **原生 Custom Provider 注入**：严格遵循 Delta 独立的 `StoredSettings` Schema，在 `native.custom_providers` 节点注册 `Magpie` OpenAI 兼容网关，并通过动态模型发现接口（`/v1/models`）自动挂载可用模型目录。
+3. **多智能体角色绑定**：将选定模型同步到 `portable.profiles`（`worker`、`scout`、`reviewer`），确保 Delta 子代理和多模态工作流无缝调用。
+4. **Library 生态互通**：将 Magpie 的 Library（MCP、Skills、AGENTS 规范）直接对齐到 Delta 原生识别的 `~/.agents/skills`、`~/.agents/mcp.json` 与 `~/.agents/AGENTS.md`，实现一键通用。
+5. **断开还原**：在 Magpie 中关闭 Delta 开关时，由 Magpie 自动清理注入配置并完整恢复用户的原有设置。
 
 ---
 
