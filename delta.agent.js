@@ -3,8 +3,10 @@
 // - Windows: %APPDATA%/delta/settings.json
 // - macOS / Linux: ~/.config/delta/settings.json
 //
-// Models are exposed through language_models.openai_compatible.magpie,
-// and chosen in agent.default_model { provider: "magpie", model: "<id>" }.
+// Dual-mode compatibility:
+// 1. Delta native custom provider: native.custom_providers
+// 2. Zed-compatible engine: language_models.openai_compatible.magpie
+// Model selection: agent.default_model { provider: "magpie", model: "<id>" }
 
 export const agent = {
   id: "delta",
@@ -32,8 +34,7 @@ export const agent = {
  * @param {Array} context.models - list of all active models in magpie
  */
 export function connect({ gateway, model, models }) {
-  const available_models = (models || []).map((m) => {
-    // Map reasoning effort: Zed/Delta supports minimal, low, medium, high
+  const zedModels = (models || []).map((m) => {
     let effort = null;
     if (Array.isArray(m.efforts) && m.efforts.length > 0) {
       effort = m.efforts[m.efforts.length - 1];
@@ -52,11 +53,36 @@ export function connect({ gateway, model, models }) {
     return item;
   });
 
+  const deltaModels = (models || []).map((m) => {
+    return {
+      id: m.id,
+      context_window: m.context || 128000,
+      max_output_tokens: m.output || 16384,
+      reasoning_efforts: Array.isArray(m.efforts) ? m.efforts : [],
+      parallel_tool_calls: true,
+      interleaved_reasoning: false,
+    };
+  });
+
   return {
     "language_models.openai_compatible.magpie": {
       api_url: gateway.v1,
-      available_models: available_models,
+      available_models: zedModels,
     },
+    "native.custom_providers": [
+      {
+        name: "Magpie",
+        base_url: gateway.v1,
+        api_mode: "open_ai_chat_completions",
+        headers: [
+          {
+            name: "Authorization",
+            value: `Bearer ${gateway.key}`,
+          },
+        ],
+        models: deltaModels,
+      },
+    ],
     "agent.default_model.provider": "magpie",
   };
 }
