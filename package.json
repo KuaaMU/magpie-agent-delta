@@ -1,29 +1,11 @@
 {
-  "name": "magpie-agent-delta",
-  "version": "0.1.2",
-  "description": "Delta (delta.dev by Zed) as a magpie agent: pick any model for Delta on the Agents page",
+  "name": "@magpie-community/agent-delta",
+  "version": "0.1.0",
+  "description": "Delta (delta.dev by Zed Industries) as a magpie agent: pick one of magpie's models for it on the Agents page",
   "type": "module",
-  "author": "KuaaMU",
+  "files": ["delta.agent.js", "README.md", "LICENSE"],
+  "keywords": ["magpie", "magpie-agent", "delta", "zed", "llm-gateway"],
   "license": "MIT",
-  "keywords": [
-    "magpie",
-    "magpie-plugin",
-    "magpie-agent",
-    "delta",
-    "zed",
-    "llm-gateway"
-  ],
-  "files": [
-    "delta.agent.js",
-    "icon.svg",
-    "README.md"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/KuaaMU/magpie-agent-delta.git"
-  },
-  "magpie": {
-    "agent": "./delta.agent.js",
-    "icon": "https://delta.dev/favicon.svg"
-  }
+  "repository": { "type": "git", "url": "git+https://github.com/magpie-community/plugins.git", "directory": "packages/delta" },
+  "magpie": { "agent": "./delta.agent.js", "icon": "https://delta.dev/favicon.svg" }
 }
